@@ -1,11 +1,11 @@
 add_subdirectory(gtest)
 
-set(TEST_NAME ${CMAKE_PROJECT_NAME}_test)
+set(TEST_NAME ${CMAKE_PROJECT_NAME}_tests)
 
 
 set(TEST_SRC
         main.cpp
-        test.cpp)
+        sample.cpp)
 
 add_executable(${TEST_NAME} ${TEST_SRC})
 
