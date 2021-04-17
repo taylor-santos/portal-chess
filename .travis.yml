@@ -11,8 +11,8 @@ jobs:
       script:
         - mkdir -p build
         - cd build
-        - cmake -DCMAKE_BUILD_TYPE=Coverage ..
-        - make portal_chess_test
+        - cmake -DCMAKE_CXX_FLAGS=--coverage ..
+        - make portal_chess_tests
         - cd ..
         - ./build/portal_chess_tests
       after_success:
