@@ -14,7 +14,7 @@ jobs:
         - cmake -DCMAKE_CXX_FLAGS=--coverage ..
         - make portal_chess_tests
         - cd ..
-        - ./build/portal_chess_tests
+        - ./build/test/portal_chess_tests
       after_success:
         - coveralls -i src -e src/main.cpp --gcov-options '\-lp'
     - os: linux
@@ -35,11 +35,11 @@ jobs:
         - cd build
         - cmake -G "Visual Studio 15 2017" -A x64 ..
         - cmake --build . --config Release
-        - ./Debug/portal_chess_tests.exe
+        - ./Release/test/portal_chess_tests.exe
 script:
   - mkdir -p build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release ..
   - make portal_chess_tests
   - cd ..
-  - ./build/portal_chess_tests
+  - ./build/test/portal_chess_tests
