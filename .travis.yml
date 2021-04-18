@@ -30,6 +30,7 @@ jobs:
       before_install:
         - git clone https://github.com/microsoft/vcpkg
         - cd vcpkg
+        - ls -lA
         - .\bootstrap-vcpkg.bat
         - .\vcpkg install glfw:x64-windows-static
         - cd .\installed\x64-windows-static
