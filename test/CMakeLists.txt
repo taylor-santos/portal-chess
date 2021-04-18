@@ -2,15 +2,11 @@ add_subdirectory(gtest)
 
 set(TEST_NAME ${CMAKE_PROJECT_NAME}_tests)
 
-include_directories(
-        ${PROJECT_SOURCE_DIR}/include
-        ${IMGUI_DIR}
-        ${IMGUI_DIR}/backends)
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(TEST_SRC
         main.cpp
-        sample.cpp
-        imgui.cpp)
+        sample.cpp)
 
 add_executable(${TEST_NAME} ${TEST_SRC})
 
