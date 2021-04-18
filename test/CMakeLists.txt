@@ -2,17 +2,25 @@ add_subdirectory(gtest)
 
 set(TEST_NAME ${CMAKE_PROJECT_NAME}_tests)
 
+include_directories(
+        ${PROJECT_SOURCE_DIR}/include
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends)
 
 set(TEST_SRC
         main.cpp
-        sample.cpp)
+        sample.cpp
+        imgui.cpp)
 
 add_executable(${TEST_NAME} ${TEST_SRC})
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(${TEST_NAME}
+        ${PROJECT_NAME}_lib
+        gtest_main
+        gtest)
 
-target_link_libraries(${TEST_NAME} ${PROJECT_NAME}_lib gtest_main gtest)
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif ()
+
 add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-
-include(GoogleTest)
-gtest_discover_tests(${TEST_NAME})

@@ -1,8 +1,29 @@
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(
+        ${PROJECT_SOURCE_DIR}/include
+        ${IMGUI_DIR}
+        ${IMGUI_DIR}/backends)
 
 set(BUILD_SRC
-        main.cpp
-        )
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
 
-add_executable(${PROJECT_NAME} ${BUILD_SRC})
+add_executable(${PROJECT_NAME} ${BUILD_SRC} main.cpp)
+
 add_library(${PROJECT_NAME}_lib STATIC ${BUILD_SRC})
+
+target_link_libraries(${PROJECT_NAME}
+        glad
+        glfw
+        OpenGL::GL
+        ${CMAKE_DL_LIBS})
+
+target_link_libraries(${PROJECT_NAME}_lib
+        glad
+        glfw
+        OpenGL::GL
+        ${CMAKE_DL_LIBS})
