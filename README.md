@@ -29,7 +29,7 @@
 If building on Windows, install [vcpkg](https://github.com/microsoft/vcpkg).
 
 * CMake >= 3.16
-* glfw3 >= 3.3.2
+* glfw3 >= 3.3
 
   Linux:
   ```sh

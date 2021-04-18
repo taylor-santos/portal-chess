@@ -34,6 +34,7 @@ jobs:
         - export GLFW3_INCLUDE_DIR=`pwd`/include
         - export GLFW3_INSTALL_DIR=`pwd`/install
         - cd ../..
+        - export CMAKE_PREFIX_PATH=$GLFW3_INSTALL_DIR
       script:
         - cmake -G "Visual Studio 15 2017" -A x64 -DCMAKE_INSTALL_PREFIX=$GLFW3_INSTALL_DIR ..
 addons:
