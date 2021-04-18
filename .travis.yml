@@ -28,15 +28,15 @@ jobs:
       name: "Windows"
       compiler: "msvc2017"
       before_install:
-        - wget -nc -O glfw.zip https://github.com/glfw/glfw/archive/3.3.zip
-        - 7z x glfw.zip -oglfw
-        - cd glfw/glfw-3.3
-        - export GLFW3_INCLUDE_DIR=`pwd`/include
-        - export GLFW3_INSTALL_DIR=`pwd`/install
-        - cd ../..
-        - export CMAKE_PREFIX_PATH=$GLFW3_INSTALL_DIR
+        - git clone https://github.com/microsoft/vcpkg
+        - cd vcpkg
+        - .\bootstrap-vcpkg.bat
+        - .\vcpkg install glfw:x64-windows-static
+        - cd .\installed\x64-windows-static
+        - export VCPKG_DIR=`pwd`
       script:
-        - cmake -G "Visual Studio 15 2017" -A x64 -DCMAKE_INSTALL_PREFIX=$GLFW3_INSTALL_DIR ..
+        - echo $VCPKG_DIR
+        - cmake -G "Visual Studio 15 2017" -A x64 ..
 addons:
   apt:
     packages:
