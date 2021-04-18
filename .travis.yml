@@ -35,7 +35,7 @@ jobs:
       name: "Windows"
       compiler: "msvc2017"
       before_install:
-        - choco install glfw
+        - choco install glfw3
       script:
         - mkdir -p build
         - cd build
