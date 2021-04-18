@@ -9,12 +9,7 @@ jobs:
       before_install:
         - pip install --user cpp-coveralls
       script:
-        - mkdir -p build
-        - cd build
         - cmake -DCMAKE_CXX_FLAGS=--coverage ..
-        - make portal_chess_tests
-        - cd ..
-        - ./build/test/portal_chess_tests
       after_success:
         - coveralls --exclude external --exclude test --exclude src/main.cpp --gcov-options '\-lp'
     - os: linux
@@ -27,23 +22,30 @@ jobs:
       name: "OSX"
       osx_image: xcode12.2
       compiler: clang
-      addons:
-        homebrew:
-          packages:
-            - glfw
+      script:
+        - cmake -DCMAKE_BUILD_TYPE=Release -Dglfw3_Dir=$(brew --prefix qt5)/lib
     - os: windows
       name: "Windows"
       compiler: "msvc2017"
+      before_install:
+        - choco install glfw3
       script:
-        - mkdir -p build
-        - cd build
-        - cmake -G "Visual Studio 15 2017" -A x64 ..
-        - cmake --build . --config Release
-        - ./test/Release/portal_chess_tests.exe
-script:
+        - cmake -G "Visual Studio 15 2017" -A x64 -Dglfw3_DIR=$ChocolateyInstall/lib ..
+addons:
+  apt:
+    packages:
+      - libglfw3-dev
+  homebrew:
+    packages:
+      - glfw3
+
+before_script:
   - mkdir -p build
   - cd build
+
+script:
   - cmake -DCMAKE_BUILD_TYPE=Release ..
-  - make portal_chess_tests
-  - cd ..
-  - ./build/test/portal_chess_tests
+
+after_script:
+  - cmake --build . --config Release
+  - ./test/portal_chess_tests
