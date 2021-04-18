@@ -23,8 +23,13 @@ jobs:
       osx_image: xcode12.2
       compiler: clang
       before_install:
-        - brew list glfw &>/dev/null && brew upgrade glfw || brew install glfw
-        - export glfw3_DIR=$(brew --prefix glfw)/lib/cmake/glfw3
+        - git clone https://github.com/Microsoft/vcpkg.git
+        - cd vcpkg
+        - ./bootstrap-vcpkg.sh
+        - ./vcpkg install glfw3:x64-osx-static
+        - cd ./installed/x64-osx-static
+        - export glfw3_DIR=`pwd`
+        - cd ../../..
     - os: windows
       name: "Windows"
       compiler: "msvc2017"
