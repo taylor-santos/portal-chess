@@ -32,6 +32,11 @@ jobs:
         - cmake --build . --config Release
         - ./test/Release/portal_chess_tests
 
+addons:
+  apt:
+    packages:
+      - xorg-dev
+
 before_script:
   - mkdir -p build
   - cd build
