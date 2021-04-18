@@ -34,21 +34,12 @@ jobs:
     - os: windows
       name: "Windows"
       compiler: "msvc2017"
-      before_install:
-        - choco install glfw3
       script:
         - mkdir -p build
         - cd build
         - cmake -G "Visual Studio 15 2017" -A x64 ..
         - cmake --build . --config Release
         - ./test/Release/portal_chess_tests.exe
-addons:
-  apt:
-    packages:
-      - libglfw3-dev
-  homebrew:
-    packages:
-      - glfw3
 script:
   - mkdir -p build
   - cd build
