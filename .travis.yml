@@ -32,7 +32,7 @@ jobs:
         - cd vcpkg
         - ls -lA
         - ./bootstrap-vcpkg.bat
-        - ./vcpkg install glfw:x64-windows-static
+        - ./vcpkg install glfw3:x64-windows-static
         - cd ./installed/x64-windows-static
         - export VCPKG_DIR=`pwd`
       script:
