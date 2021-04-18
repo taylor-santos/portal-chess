@@ -37,13 +37,17 @@ jobs:
         - cd ../../..
       script:
         - cmake -G "Visual Studio 15 2017" -A x64 ..
+      after_script:
+        - cmake --build . --config Release
+        - ./test/Release/portal_chess_tests
+
 addons:
   apt:
     packages:
       - libglfw3-dev
   homebrew:
     packages:
-      - glfw3
+      - glfw
 
 before_script:
   - mkdir -p build
