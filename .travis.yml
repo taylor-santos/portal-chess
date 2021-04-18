@@ -48,7 +48,7 @@ addons:
       - libglfw3-dev
   homebrew:
     packages:
-      - glfw
+      - glfw3
 script:
   - mkdir -p build
   - cd build
