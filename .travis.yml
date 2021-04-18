@@ -28,12 +28,12 @@ jobs:
       name: "Windows"
       compiler: "msvc2017"
       before_install:
-        - git clone https://github.com/microsoft/vcpkg
+        - git clone https://github.com/Microsoft/vcpkg.git
         - cd vcpkg
         - ls -lA
-        - .\bootstrap-vcpkg.bat
-        - .\vcpkg install glfw:x64-windows-static
-        - cd .\installed\x64-windows-static
+        - ./bootstrap-vcpkg.bat
+        - ./vcpkg install glfw:x64-windows-static
+        - cd ./installed/x64-windows-static
         - export VCPKG_DIR=`pwd`
       script:
         - echo $VCPKG_DIR
