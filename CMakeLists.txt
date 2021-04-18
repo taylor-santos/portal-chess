@@ -8,6 +8,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 enable_testing()
 
+add_subdirectory(external)
 add_subdirectory(src)
-add_subdirectory(external/glad)
 add_subdirectory(test)

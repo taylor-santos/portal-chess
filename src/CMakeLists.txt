@@ -1,4 +1,3 @@
-find_package(glfw3 3.3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
 set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/external/imgui)

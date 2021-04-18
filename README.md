@@ -26,19 +26,14 @@
 
 ### Prerequisites
 
-If building on Windows, install [vcpkg](https://github.com/microsoft/vcpkg).
-
 * CMake >= 3.16
-* glfw3 >= 3.3
-
-  Linux:
-  ```sh
-  apt install libglfw3-dev
-  ```
-  Windows:
-  ```sh
-  vcpkg.exe install glfw3:x64-windows-static
-  ```
+* glad >= 0.1.34 (included as submodule)
+* glfw3 >= 3.3 (included as submodule)
+    * Linux dependencies: ([more info](https://www.glfw.org/docs/latest/compile.html#compile_deps_x11))
+        * X11: `xorg-dev`
+        * Wayland: `libwayland-dev`
+        * OSMesa: `libosmesa6-dev`
+* ImGui >= 1.82 (included as submodule)
 
 ### Installation
 
