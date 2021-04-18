@@ -23,8 +23,7 @@ jobs:
       osx_image: xcode12.2
       compiler: clang
       script:
-        - export glfw3_DIR=$(brew --prefix glfw)/lib
-        - echo $glfw3_DIR
+        - export glfw3_DIR=$(brew --prefix glfw)/lib/cmake/glfw3
         - cmake -DCMAKE_BUILD_TYPE=Release ..
     - os: windows
       name: "Windows"
