@@ -26,8 +26,8 @@ jobs:
         - git clone https://github.com/Microsoft/vcpkg.git
         - cd vcpkg
         - ./bootstrap-vcpkg.sh
-        - ./vcpkg install glfw3:x64-osx-static
-        - cd ./installed/x64-osx-static
+        - ./vcpkg install glfw3:x64-osx
+        - cd ./installed/x64-osx
         - export glfw3_DIR=`pwd`
         - cd ../../..
     - os: windows
