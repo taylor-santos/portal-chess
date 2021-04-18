@@ -23,7 +23,9 @@ jobs:
       osx_image: xcode12.2
       compiler: clang
       script:
-        - cmake -DCMAKE_BUILD_TYPE=Release -Dglfw3_Dir=$(brew --prefix qt5)/lib
+        - export glfw3_DIR=$(brew --prefix glfw)/lib
+        - echo $glfw3_DIR
+        - cmake -DCMAKE_BUILD_TYPE=Release ..
     - os: windows
       name: "Windows"
       compiler: "msvc2017"
