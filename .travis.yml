@@ -22,9 +22,9 @@ jobs:
       name: "OSX"
       osx_image: xcode12.2
       compiler: clang
-      script:
+      before_install:
+        - brew list glfw &>/dev/null && brew upgrade glfw || brew install glfw
         - export glfw3_DIR=$(brew --prefix glfw)/lib/cmake/glfw3
-        - cmake -DCMAKE_BUILD_TYPE=Release ..
     - os: windows
       name: "Windows"
       compiler: "msvc2017"
@@ -46,9 +46,6 @@ addons:
   apt:
     packages:
       - libglfw3-dev
-  homebrew:
-    packages:
-      - glfw
 
 before_script:
   - mkdir -p build
