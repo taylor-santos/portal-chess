@@ -28,9 +28,14 @@ jobs:
       name: "Windows"
       compiler: "msvc2017"
       before_install:
-        - choco install glfw3
+        - wget -nc -O glfw.zip https://github.com/glfw/glfw/archive/3.3.zip
+        - 7z x glfw.zip -oglfw
+        - cd glfw/glfw-3.3
+        - export GLFW3_INCLUDE_DIR=`pwd`/include
+        - export GLFW3_INSTALL_DIR=`pwd`/install
+        - cd ../..
       script:
-        - cmake -G "Visual Studio 15 2017" -A x64 -Dglfw3_DIR=$ChocolateyInstall/lib ..
+        - cmake -G "Visual Studio 15 2017" -A x64 -DCMAKE_INSTALL_PREFIX=$GLFW3_INSTALL_DIR ..
 addons:
   apt:
     packages:
