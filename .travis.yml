@@ -13,7 +13,7 @@ jobs:
         - cmake --build . --config Release
         - ./test/portal_chess_tests
       after_success:
-        - coveralls --exclude external --exclude test --gcov-options '\-lp'
+        - coveralls -i src -e src/main.cpp --gcov-options '\-lp'
     - os: linux
       name: "GCC"
       compiler: gcc
