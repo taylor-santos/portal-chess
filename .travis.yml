@@ -9,7 +9,7 @@ jobs:
       before_install:
         - pip install --user cpp-coveralls
       script:
-        - cmake -DCMAKE_CXX_FLAGS=--coverage ..
+        - cmake -DCMAKE_CXX_FLAGS=--coverage -DCMAKE_BUILD_TYPE=Debug ..
         - make portal_chess_tests
         - cd ..
         - ./build/test/portal_chess_tests
