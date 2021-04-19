@@ -9,12 +9,12 @@ jobs:
       before_install:
         - pip install --user cpp-coveralls
       script:
-        - cmake -DCMAKE_CXX_FLAGS=--coverage -DCMAKE_BUILD_TYPE=Debug ..
+        - cmake -DCMAKE_CXX_FLAGS=--coverage ..
         - make portal_chess_tests
         - cd ..
         - ./build/test/portal_chess_tests
       after_success:
-        - coveralls --include src --include include --exclude build --exclude external --exclude test --exclude src/main.cpp --gcov-options '\-lp'
+        - coveralls --exclude external --exclude test --exclude src/main.cpp --gcov-options '\-lp'
     - os: linux
       name: "GCC"
       compiler: gcc
