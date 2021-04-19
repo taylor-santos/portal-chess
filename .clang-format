@@ -36,22 +36,6 @@ DerivePointerAlignment: false
 DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
-IncludeBlocks: Regroup
-IncludeCategories:
-  - Regex: '^<ext/.*\.h>'
-    Priority: 2
-  - Regex: '^<.*\.h>'
-    Priority: 1
-  - Regex: '^<.*'
-    Priority: 2
-  - Regex: '"ast/.*'
-    Priority: 3
-  - Regex: '"pattern/.*'
-    Priority: 4
-  - Regex: '"type/.*'
-    Priority: 5
-  - Regex: '.*'
-    Priority: 6
 IndentCaseLabels: true
 IndentPPDirectives: AfterHash
 IndentWidth: 4
@@ -62,7 +46,6 @@ MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PointerAlignment: Right
 ReflowComments: true
-SortIncludes: true
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
