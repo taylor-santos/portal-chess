@@ -14,7 +14,7 @@ jobs:
         - cd ..
         - ./build/test/portal_chess_tests
       after_success:
-        - coveralls --exclude build --exclude external --exclude test --exclude src/main.cpp --gcov-options '\-lp'
+        - coveralls --include src --include include --exclude build --exclude external --exclude test --exclude src/main.cpp --gcov-options '\-lp'
     - os: linux
       name: "GCC"
       compiler: gcc
