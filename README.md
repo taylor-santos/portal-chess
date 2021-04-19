@@ -27,6 +27,7 @@
 ### Prerequisites
 
 * CMake >= 3.16
+* Python >= 3.8
 * glad >= 0.1.34 (included as submodule)
 * glfw3 >= 3.3 (included as submodule)
     * Linux dependencies: ([more info](https://www.glfw.org/docs/latest/compile.html#compile_deps_x11))
