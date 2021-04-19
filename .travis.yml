@@ -10,10 +10,11 @@ jobs:
         - pip install --user cpp-coveralls
       script:
         - cmake -DCMAKE_CXX_FLAGS=--coverage ..
-        - cmake --build . --config Release
-        - ./test/portal_chess_tests
+        - make portal_chess_tests
+        - cd ..
+        - ./build/test/portal_chess_tests
       after_success:
-        - coveralls -i src -e src/main.cpp --gcov-options '\-lp'
+        - coveralls --exclude external --exclude test --exclude src/main.cpp --gcov-options '\-lp'
     - os: linux
       name: "GCC"
       compiler: gcc
