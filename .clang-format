@@ -66,5 +66,6 @@ SpacesInSquareBrackets: false
 Standard: c++17
 TabWidth: 4
 UseTab: Never
+SortIncludes: false
 
 ...
