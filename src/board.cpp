@@ -57,7 +57,7 @@ class Board::InitialBoard : public Board {
 public:
     explicit InitialBoard(const std::vector<std::pair<Coord, Piece>> &pieces);
 
-    std::optional<Piece>
+    [[nodiscard]] std::optional<Piece>
     at(Coord coord) const override;
 
 private:
@@ -77,7 +77,7 @@ class Board::AddedPiece : public Board {
 public:
     AddedPiece(std::shared_ptr<const Board> board, Coord coord, Piece piece);
 
-    std::optional<Piece>
+    [[nodiscard]] std::optional<Piece>
     at(Coord coord) const override;
 
 private:
@@ -90,7 +90,7 @@ class Board::RemovedPiece : public Board {
 public:
     RemovedPiece(std::shared_ptr<const Board> board, Coord coord);
 
-    std::optional<Piece>
+    [[nodiscard]] std::optional<Piece>
     at(Coord coord) const override;
 
 private:
@@ -102,7 +102,7 @@ class Board::MovedPiece : public Board {
 public:
     MovedPiece(std::shared_ptr<const Board> board, Coord from, Coord to);
 
-    std::optional<Piece>
+    [[nodiscard]] std::optional<Piece>
     at(Coord coord) const override;
 
 private:
@@ -113,22 +113,22 @@ private:
 
 std::shared_ptr<const Board>
 Board::make(const std::vector<std::pair<Coord, Piece>> &pieces) {
-    return std::make_unique<InitialBoard>(pieces);
+    return std::make_shared<InitialBoard>(pieces);
 }
 
 std::shared_ptr<const Board>
 Board::addPiece(Coord coord, Piece piece) const {
-    return std::make_unique<AddedPiece>(shared_from_this(), coord, piece);
+    return std::make_shared<AddedPiece>(shared_from_this(), coord, piece);
 }
 
 std::shared_ptr<const Board>
 Board::removePiece(Coord coord) const {
-    return std::make_unique<RemovedPiece>(shared_from_this(), coord);
+    return std::make_shared<RemovedPiece>(shared_from_this(), coord);
 }
 
 std::shared_ptr<const Board>
 Board::movePiece(Coord from, Coord to) const {
-    return std::make_unique<MovedPiece>(shared_from_this(), from, to);
+    return std::make_shared<MovedPiece>(shared_from_this(), from, to);
 }
 
 static std::array<std::array<std::optional<Piece>, 8>, 8>
