@@ -113,22 +113,30 @@ private:
 
 std::shared_ptr<const Board>
 Board::make(const std::vector<std::pair<Coord, Piece>> &pieces) {
-    return std::make_shared<InitialBoard>(pieces);
+    auto ptr   = std::make_shared<InitialBoard>(pieces);
+    ptr->wptr_ = ptr;
+    return ptr;
 }
 
 std::shared_ptr<const Board>
 Board::addPiece(Coord coord, Piece piece) const {
-    return std::make_shared<AddedPiece>(shared_from_this(), coord, piece);
+    auto ptr   = std::make_shared<AddedPiece>(wptr_.lock(), coord, piece);
+    ptr->wptr_ = ptr;
+    return ptr;
 }
 
 std::shared_ptr<const Board>
 Board::removePiece(Coord coord) const {
-    return std::make_shared<RemovedPiece>(shared_from_this(), coord);
+    auto ptr   = std::make_shared<RemovedPiece>(wptr_.lock(), coord);
+    ptr->wptr_ = ptr;
+    return ptr;
 }
 
 std::shared_ptr<const Board>
 Board::movePiece(Coord from, Coord to) const {
-    return std::make_shared<MovedPiece>(shared_from_this(), from, to);
+    auto ptr   = std::make_shared<MovedPiece>(wptr_.lock(), from, to);
+    ptr->wptr_ = ptr;
+    return ptr;
 }
 
 static std::array<std::array<std::optional<Piece>, 8>, 8>

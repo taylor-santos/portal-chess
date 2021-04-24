@@ -55,7 +55,7 @@ struct Piece {
     operator!=(const Piece &other) const;
 };
 
-class Board : public std::enable_shared_from_this<Board> {
+class Board {
 public:
     Board(const Board &) = delete;
     virtual ~Board()     = default;
@@ -117,6 +117,8 @@ private:
     class MovedPiece;
 
     Board() = default;
+
+    std::weak_ptr<Board> wptr_;
 };
 
 class invalid_piece : public std::runtime_error {
