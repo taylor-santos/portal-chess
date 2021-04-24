@@ -79,92 +79,148 @@ TEST(Coord, NotEqualIfRanksDiffer) {
     ASSERT_NE(a, b);
 }
 
-TEST(Piece, NotEqualIfTypesDiffer) {
+TEST(Type, NotEqualIfTypesDiffer) {
     Color color = Color::White;
-    Coord coord = Coord{D, _5};
-    Piece a{Piece::Type::King, color, coord};
-    Piece b{Piece::Type::Queen, color, coord};
+    Piece a{Type::King, color};
+    Piece b{Type::Queen, color};
     ASSERT_NE(a, b);
 }
 
-TEST(Piece, NotEqualIfColorsDiffer) {
-    Piece::Type type  = Piece::Type::Bisop;
-    Coord       coord = Coord{D, _5};
-    Piece       a{type, Color::White, coord};
-    Piece       b{type, Color::Black, coord};
-    ASSERT_NE(a, b);
-}
-TEST(Piece, NotEqualIfCoordsDiffer) {
-    Piece::Type type  = Piece::Type::Bisop;
-    Color       color = Color::White;
-    Piece       a{type, color, Coord{A, _1}};
-    Piece       b{type, color, Coord{B, _2}};
+TEST(Type, NotEqualIfColorsDiffer) {
+    Type  type = Type::Bishop;
+    Piece a{type, Color::White};
+    Piece b{type, Color::Black};
     ASSERT_NE(a, b);
 }
 
-TEST(Board, GetPieceValidArgumentShouldNotThrow) {
-    Board board;
-    EXPECT_NO_THROW((void)board.getPiece(Coord{A, _1}));
+TEST(Board, GetPieceShouldGetInitialPiece) {
+    Coord coord{A, _1};
+    Piece piece{Type::Bishop, Color::Black};
+    auto  board    = Board::make({{coord, piece}});
+    auto  optPiece = board->at(coord);
+    ASSERT_TRUE(optPiece);
+    EXPECT_EQ(piece, *optPiece);
 }
 
 TEST(Board, GetPieceShouldGetAddedPiece) {
-    Board board;
-    Piece piece{Piece::Type::Bisop, Color::Black, Coord{A, _1}};
-    ASSERT_NO_THROW(board.addPiece(piece));
-    auto optPiece = board.getPiece(piece.coord);
+    auto  board = Board::make({});
+    Coord coord{A, _1};
+    Piece piece{Type::Bishop, Color::Black};
+    board         = board->addPiece(coord, piece);
+    auto optPiece = board->at(coord);
     ASSERT_TRUE(optPiece);
     EXPECT_EQ(piece, *optPiece);
 }
 
 TEST(Board, AddPieceOnOccupiedSpaceShouldThrowInvalidPiece) {
-    Board board;
-    Piece piece{Piece::Type::Bisop, Color::Black, Coord{A, _1}};
-    ASSERT_NO_THROW(board.addPiece(piece));
-    Piece newPiece{Piece::Type::Queen, Color::White, Coord{A, _1}};
-    EXPECT_THROW(board.addPiece(newPiece), invalid_piece);
+    Coord coord{A, _1};
+    Piece piece{Type::Bishop, Color::Black};
+    auto  board = Board::make({{coord, piece}});
+    EXPECT_THROW((void)board->addPiece(coord, {Type::Queen, Color::White}), invalid_piece);
 }
 
 TEST(Board, RemovePieceShouldRemovePiece) {
-    Board board;
     Coord coord{A, _1};
-    Piece piece{Piece::Type::Bisop, Color::Black, coord};
-    ASSERT_NO_THROW(board.addPiece(piece));
+    Piece piece{Type::Bishop, Color::Black};
+    auto  board = Board::make({{coord, piece}});
+    board       = board->removePiece(coord);
     {
-        auto optPiece = board.getPiece(coord);
-        EXPECT_TRUE(optPiece);
-    }
-    board.removePiece(coord);
-    {
-        auto optPiece = board.getPiece(coord);
+        auto optPiece = board->at(coord);
         EXPECT_FALSE(optPiece);
     }
 }
 
 TEST(Board, MovePieceFromUnoccupiedShouldThrowInvalidPiece) {
-    Board board;
-    ASSERT_THROW(board.movePiece(Coord{A, _1}, Coord{B, _2}), invalid_piece);
+    auto board = Board::make({});
+    ASSERT_THROW((void)board->movePiece(Coord{A, _1}, Coord{B, _2}), invalid_piece);
 }
 
 TEST(Board, MovePieceToOccupiedShouldThrowInvalidPiece) {
-    Board board;
     Coord from{A, _1};
     Coord to{B, _2};
-    ASSERT_NO_THROW(board.addPiece({Piece::Type::Rook, Color::White, from}));
-    ASSERT_NO_THROW(board.addPiece({Piece::Type::Pawn, Color::Black, to}));
-    ASSERT_THROW(board.movePiece(from, to), invalid_piece);
+    Piece piece1{Type::Rook, Color::White}, piece2{Type::Pawn, Color::Black};
+    auto  board = Board::make({{from, piece1}, {to, piece2}});
+    ASSERT_THROW((void)board->movePiece(from, to), invalid_piece);
 }
 
 TEST(Board, MovePieceShouldMovePiece) {
-    Board board;
     Coord from{A, _1};
     Coord to{B, _2};
-    Piece piece{Piece::Type::Rook, Color::White, from};
-    ASSERT_NO_THROW(board.addPiece(piece));
-    ASSERT_NO_THROW(board.movePiece(from, to));
-    auto oldPiece = board.getPiece(from);
+    Piece piece{Type::Rook, Color::White};
+    auto  board = Board::make({{from, piece}});
+    ASSERT_NO_THROW(board = board->movePiece(from, to));
+    auto oldPiece = board->at(from);
     EXPECT_FALSE(oldPiece);
-    auto newPiece = board.getPiece(to);
+    auto newPiece = board->at(to);
     EXPECT_TRUE(newPiece);
-    piece.coord = to;
     EXPECT_EQ(piece, *newPiece);
+}
+
+TEST(Board, MakeShouldThrowOnOverlappingPieces) {
+    Coord coord{A, _1};
+    Piece piece1{Type::King, Color::White};
+    Piece piece2{Type::Queen, Color::White};
+    ASSERT_THROW((void)Board::make({{coord, piece1}, {coord, piece2}}), invalid_piece);
+}
+
+TEST(Board, RemovePieceShouldThrowIfUnoccupied) {
+    auto board = Board::make({});
+    ASSERT_THROW((void)board->removePiece({A, _1}), invalid_piece);
+}
+
+TEST(Board, MovingPieceShouldNotAffectOtherPieces) {
+    Coord coord1{A, _1}, coord2{B, _2};
+    Piece piece1{Type::Bishop, Color::White}, piece2{Type::Knight, Color::White};
+    auto  board   = Board::make({{coord1, piece1}, {coord2, piece2}});
+    board         = board->movePiece(coord1, {A, _2});
+    auto optPiece = board->at(coord2);
+
+    ASSERT_TRUE(optPiece);
+    EXPECT_EQ(*optPiece, piece2);
+}
+
+TEST(Board, AddPieceDoesNotMutateBoard) {
+    auto  board1 = Board::make({});
+    Coord coord{A, _1};
+
+    EXPECT_FALSE(board1->at(coord));
+
+    {
+        auto board2 = board1->addPiece(coord, {Type::Rook, Color::Black});
+        EXPECT_TRUE(board2->at(coord));
+    }
+
+    EXPECT_FALSE(board1->at(coord));
+}
+
+TEST(Board, RemovePieceDoesNotMutateBoard) {
+    Coord coord{A, _1};
+    auto  board1 = Board::make({{coord, {Type::Rook, Color::Black}}});
+
+    EXPECT_TRUE(board1->at(coord));
+
+    {
+        auto board2 = board1->removePiece(coord);
+        EXPECT_FALSE(board2->at(coord));
+    }
+
+    EXPECT_TRUE(board1->at(coord));
+}
+
+TEST(Board, MovePieceDoesNotMutateBoard) {
+    Coord coord1{A, _1};
+    Coord coord2{B, _2};
+    auto  board1 = Board::make({{coord1, {Type::Pawn, Color::Black}}});
+
+    EXPECT_TRUE(board1->at(coord1));
+    EXPECT_FALSE(board1->at(coord2));
+
+    {
+        auto board2 = board1->movePiece(coord1, coord2);
+        EXPECT_FALSE(board2->at(coord1));
+        EXPECT_TRUE(board2->at(coord2));
+    }
+
+    EXPECT_TRUE(board1->at(coord1));
+    EXPECT_FALSE(board1->at(coord2));
 }

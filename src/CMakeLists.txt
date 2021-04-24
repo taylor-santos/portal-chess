@@ -17,7 +17,6 @@ set(IMGUI_SRC
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
 
 set(BUILD_SRC
-        sample.cpp
         board.cpp)
 
 add_executable(${PROJECT_NAME} ${IMGUI_SRC} ${BUILD_SRC} main.cpp)
@@ -29,3 +28,9 @@ target_link_libraries(${PROJECT_NAME}
         glfw
         OpenGL::GL
         ${CMAKE_DL_LIBS})
+
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+else ()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic -Werror)
+endif ()

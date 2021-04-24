@@ -30,7 +30,7 @@ jobs:
       compiler: "msvc2017"
       script:
         - cmake -G "Visual Studio 15 2017" -A x64 ..
-        - cmake --build . --config Release
+        - cmake --build . --target portal_chess_tests --config Release
         - ./test/Release/portal_chess_tests
 
 addons:
@@ -44,5 +44,5 @@ before_script:
 
 script:
   - cmake -DCMAKE_BUILD_TYPE=Release ..
-  - cmake --build . --config Release
+  - cmake --build . --target portal_chess_tests -- -j 2
   - ./test/portal_chess_tests

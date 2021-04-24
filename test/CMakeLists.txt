@@ -6,7 +6,6 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(TEST_SRC
         main.cpp
-        sample.cpp
         board.cpp)
 
 add_executable(${TEST_NAME} ${TEST_SRC})
