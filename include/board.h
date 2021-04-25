@@ -12,48 +12,8 @@
 
 namespace Chess {
 
-enum class Color { White, Black };
-enum class Type { Bishop, King, Knight, Pawn, Portal, Queen, Rook };
-
-// Use enum, not enum class, to allow implicit int conversion
-enum File { A = 1, B, C, D, E, F, G, H };
-enum Rank { _1 = 1, _2, _3, _4, _5, _6, _7, _8 };
-
-std::ostream &
-operator<<(std::ostream &os, File file);
-
-struct Coord {
-    /***
-     * Construct a Coord instance from the given file and rank values.
-     * @param file the horizontal coordinate, letters A-H representing values [1,8]
-     * @param rank the vertical coordinate, representing values [1,8]
-     * @throws std::invalid_argument if either argument is outside of the interval [1,8]
-     */
-    Coord(File file, Rank rank);
-
-    bool
-    operator==(const Coord &other) const;
-
-    bool
-    operator!=(const Coord &other) const;
-
-    File file;
-    Rank rank;
-};
-
-std::ostream &
-operator<<(std::ostream &os, const Coord &coord);
-
-struct Piece {
-    Type  type;
-    Color color;
-
-    bool
-    operator==(const Piece &other) const;
-
-    bool
-    operator!=(const Piece &other) const;
-};
+class Piece;
+class Coord;
 
 class Board {
 public:
@@ -62,12 +22,13 @@ public:
 
     /***
      * Construct a new Board from a list of pieces and return it wrapped in an std::shared_ptr.
-     * @param pieces a list of (coord, piece) pairs to be added to the board
+     * @param pieces a list of (coord, piece) pairs to be added to the board, where coord is the
+     *        location for the piece, and piece is a std::shared_ptr to a Piece
      * @returns a newly constructed Board wrapped in a std::shared_ptr, containing the given pieces
      * @throws invalid_piece if two or more of the given pieces have overlapping coordinates
      */
     [[nodiscard]] static std::shared_ptr<const Board>
-    make(const std::vector<std::pair<Coord, Piece>> &pieces);
+    make(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces);
 
     /***
      * Retrieve a piece from the Board at the given coordinate.
@@ -75,7 +36,7 @@ public:
      * @returns an std::optional containing the piece at the given coordinate if one exists, or an
      *          empty std::optional otherwise
      */
-    [[nodiscard]] virtual std::optional<Piece>
+    [[nodiscard]] virtual std::optional<const Piece *>
     at(Coord coord) const = 0;
 
     /***
@@ -86,7 +47,7 @@ public:
      * @throws invalid_piece if this Board already has a piece at the new piece's coordinates
      */
     [[nodiscard]] std::shared_ptr<const Board>
-    addPiece(Coord coord, Piece piece) const;
+    addPiece(Coord coord, std::shared_ptr<Piece> piece) const;
 
     /***
      * Construct a new Board representing this Board's state, with one piece removed from the given

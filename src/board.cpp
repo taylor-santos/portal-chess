@@ -7,90 +7,48 @@
 #include <sstream>
 #include <array>
 
+#include "coord.h"
+
 namespace Chess {
-
-std::ostream &
-operator<<(std::ostream &os, File file) {
-    int fileInt = file;
-    if (file < A || H < file) {
-        return os << fileInt;
-    }
-    return os << static_cast<char>('A' + fileInt - 1);
-}
-
-Coord::Coord(File file, Rank rank)
-    : file{file}
-    , rank{rank} {
-    if (file < A || H < file || rank < _1 || _8 < rank) {
-        std::stringstream ss;
-        ss << "Coord constructor called with invalid coordinate (" << file << ", " << rank << ")";
-        throw std::invalid_argument(ss.str());
-    }
-}
-
-bool
-Coord::operator==(const Coord &other) const {
-    return file == other.file && rank == other.rank;
-}
-
-bool
-Coord::operator!=(const Coord &other) const {
-    return !(*this == other);
-}
-
-bool
-Piece::operator==(const Piece &other) const {
-    return type == other.type && color == other.color;
-}
-
-bool
-Piece::operator!=(const Piece &other) const {
-    return !(*this == other);
-}
-
-std::ostream &
-operator<<(std::ostream &os, const Coord &coord) {
-    return os << coord.file << coord.rank;
-}
 
 class Board::InitialBoard : public Board {
 public:
-    explicit InitialBoard(const std::vector<std::pair<Coord, Piece>> &pieces);
+    explicit InitialBoard(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces);
 
-    [[nodiscard]] std::optional<Piece>
+    [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
 
 private:
     class BoardState {
     public:
-        explicit BoardState(std::array<std::array<std::optional<Piece>, 8>, 8> board);
+        explicit BoardState(std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board);
 
-        [[nodiscard]] const std::optional<Piece> &
+        [[nodiscard]] const std::shared_ptr<Piece> &
         operator()(Coord coord) const;
 
     private:
-        const std::array<std::array<std::optional<Piece>, 8>, 8> board_;
+        const std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board_;
     } board_;
 };
 
 class Board::AddedPiece : public Board {
 public:
-    AddedPiece(std::shared_ptr<const Board> board, Coord coord, Piece piece);
+    AddedPiece(std::shared_ptr<const Board> board, Coord coord, std::shared_ptr<Piece> piece);
 
-    [[nodiscard]] std::optional<Piece>
+    [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
 
 private:
     const std::shared_ptr<const Board> board_;
     const Coord                        coord_;
-    const Piece                        piece_;
+    const std::shared_ptr<Piece>       piece_;
 };
 
 class Board::RemovedPiece : public Board {
 public:
     RemovedPiece(std::shared_ptr<const Board> board, Coord coord);
 
-    [[nodiscard]] std::optional<Piece>
+    [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
 
 private:
@@ -102,7 +60,7 @@ class Board::MovedPiece : public Board {
 public:
     MovedPiece(std::shared_ptr<const Board> board, Coord from, Coord to);
 
-    [[nodiscard]] std::optional<Piece>
+    [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
 
 private:
@@ -112,15 +70,15 @@ private:
 };
 
 std::shared_ptr<const Board>
-Board::make(const std::vector<std::pair<Coord, Piece>> &pieces) {
+Board::make(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces) {
     auto ptr   = std::make_shared<InitialBoard>(pieces);
     ptr->wptr_ = ptr;
     return ptr;
 }
 
 std::shared_ptr<const Board>
-Board::addPiece(Coord coord, Piece piece) const {
-    auto ptr   = std::make_shared<AddedPiece>(wptr_.lock(), coord, piece);
+Board::addPiece(Coord coord, std::shared_ptr<Piece> piece) const {
+    auto ptr   = std::make_shared<AddedPiece>(wptr_.lock(), coord, std::move(piece));
     ptr->wptr_ = ptr;
     return ptr;
 }
@@ -139,10 +97,10 @@ Board::movePiece(Coord from, Coord to) const {
     return ptr;
 }
 
-static std::array<std::array<std::optional<Piece>, 8>, 8>
-getPieces(const std::vector<std::pair<Coord, Piece>> &pieces) {
-    std::array<std::array<std::optional<Piece>, 8>, 8> board;
-    for (auto [coord, piece] : pieces) {
+static std::array<std::array<std::shared_ptr<Piece>, 8>, 8>
+getPieces(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces) {
+    std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board;
+    for (auto &[coord, piece] : pieces) {
         auto [file, rank] = coord;
         auto &prev        = board[file - 1][rank - 1];
         if (prev) {
@@ -156,28 +114,33 @@ getPieces(const std::vector<std::pair<Coord, Piece>> &pieces) {
     return board;
 }
 
-Board::InitialBoard::InitialBoard(const std::vector<std::pair<Coord, Piece>> &pieces)
+Board::InitialBoard::InitialBoard(
+    const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces)
     : board_{getPieces(pieces)} {}
 
-std::optional<Piece>
+std::optional<const Piece *>
 Board::InitialBoard::at(Coord coord) const {
-    return board_(coord);
+    auto &optPiece = board_(coord);
+    return optPiece ? std::optional(optPiece.get()) : std::nullopt;
 }
 
 Board::InitialBoard::BoardState::BoardState(
-    std::array<std::array<std::optional<Piece>, 8>, 8> board)
-    : board_{board} {}
+    std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board)
+    : board_{std::move(board)} {}
 
-const std::optional<Piece> &
+const std::shared_ptr<Piece> &
 Board::InitialBoard::BoardState::operator()(Coord coord) const {
     auto [file, rank] = coord;
     return board_[file - 1][rank - 1];
 }
 
-Board::AddedPiece::AddedPiece(std::shared_ptr<const Board> board, Coord coord, Piece piece)
+Board::AddedPiece::AddedPiece(
+    std::shared_ptr<const Board> board,
+    Coord                        coord,
+    std::shared_ptr<Piece>       piece)
     : board_{std::move(board)}
     , coord_{coord}
-    , piece_{piece} {
+    , piece_{std::move(piece)} {
     if (board_->at(coord)) {
         std::stringstream ss;
         ss << "Cannot add piece to " << coord << ": this space is occupied";
@@ -185,9 +148,9 @@ Board::AddedPiece::AddedPiece(std::shared_ptr<const Board> board, Coord coord, P
     }
 }
 
-std::optional<Piece>
+std::optional<const Piece *>
 Board::AddedPiece::at(Coord coord) const {
-    return coord_ == coord ? piece_ : board_->at(coord);
+    return coord_ == coord ? piece_.get() : board_->at(coord);
 }
 
 Board::RemovedPiece::RemovedPiece(std::shared_ptr<const Board> board, Coord coord)
@@ -200,13 +163,11 @@ Board::RemovedPiece::RemovedPiece(std::shared_ptr<const Board> board, Coord coor
     }
 }
 
-std::optional<Piece>
+std::optional<const Piece *>
 Board::RemovedPiece::at(Coord coord) const {
+    std::optional<std::reference_wrapper<Piece>> optRef;
     return coord == coord_ ? std::nullopt : board_->at(coord);
 }
-
-invalid_piece::invalid_piece(const std::string &arg)
-    : std::runtime_error(arg) {}
 
 Board::MovedPiece::MovedPiece(std::shared_ptr<const Board> board, Coord from, Coord to)
     : board_{std::move(board)}
@@ -224,7 +185,7 @@ Board::MovedPiece::MovedPiece(std::shared_ptr<const Board> board, Coord from, Co
     }
 }
 
-std::optional<Piece>
+std::optional<const Piece *>
 Board::MovedPiece::at(Coord coord) const {
     if (coord == to_) {
         return board_->at(from_);
@@ -234,5 +195,8 @@ Board::MovedPiece::at(Coord coord) const {
         return board_->at(coord);
     }
 }
+
+invalid_piece::invalid_piece(const std::string &arg)
+    : std::runtime_error(arg) {}
 
 } // namespace Chess

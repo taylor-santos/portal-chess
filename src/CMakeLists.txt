@@ -17,7 +17,9 @@ set(IMGUI_SRC
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
 
 set(BUILD_SRC
-        board.cpp)
+        board.cpp
+        coord.cpp
+        piece.cpp)
 
 add_executable(${PROJECT_NAME} ${IMGUI_SRC} ${BUILD_SRC} main.cpp)
 
