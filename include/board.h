@@ -6,11 +6,18 @@
 #define PORTAL_CHESS_INCLUDE_BOARD_H
 
 #include <vector>
-#include <iostream>
+#include <stdexcept>
 #include <memory>
 #include <optional>
+#include <functional>
 
 namespace Chess {
+
+// This alias allows you to use a unique_ptr of an incomplete type by specifying the signature of
+// its destructor. In this case it is used to store Piece instances without needing the declaration
+// of class Piece.
+template<typename T>
+using incomplete_ptr = std::unique_ptr<T, std::function<void(T *)>>;
 
 class Piece;
 class Coord;
@@ -24,17 +31,18 @@ public:
      * Construct a new Board from a list of pieces and return it wrapped in an std::shared_ptr.
      * @param pieces a list of (coord, piece) pairs to be added to the board, where coord is the
      *        location for the piece, and piece is a std::shared_ptr to a Piece
-     * @returns a newly constructed Board wrapped in a std::shared_ptr, containing the given pieces
+     * @returns a newly constructed Board wrapped in a std::shared_ptr, containing the given
+     * pieces
      * @throws invalid_piece if two or more of the given pieces have overlapping coordinates
      */
     [[nodiscard]] static std::shared_ptr<const Board>
-    make(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces);
+    make(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> pieces);
 
     /***
      * Retrieve a piece from the Board at the given coordinate.
      * @param coord the coordinate to retrieve a piece from
-     * @returns an std::optional containing the piece at the given coordinate if one exists, or an
-     *          empty std::optional otherwise
+     * @returns an std::optional containing the piece at the given coordinate if one exists, or
+     * an empty std::optional otherwise
      */
     [[nodiscard]] virtual std::optional<const Piece *>
     at(Coord coord) const = 0;
@@ -47,11 +55,11 @@ public:
      * @throws invalid_piece if this Board already has a piece at the new piece's coordinates
      */
     [[nodiscard]] std::shared_ptr<const Board>
-    addPiece(Coord coord, std::shared_ptr<Piece> piece) const;
+    addPiece(Coord coord, incomplete_ptr<Piece> piece) const;
 
     /***
-     * Construct a new Board representing this Board's state, with one piece removed from the given
-     * coordinate.
+     * Construct a new Board representing this Board's state, with one piece removed from the
+     * given coordinate.
      * @param coord the coordinate to remove a piece from
      * @returns a new Board state representing this Board with a piece removed
      * @throws invalid_piece if no piece exists at the given coordinate

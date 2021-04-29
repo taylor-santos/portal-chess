@@ -15,7 +15,8 @@ enum Rank { _1 = 1, _2, _3, _4, _5, _6, _7, _8 };
 std::ostream &
 operator<<(std::ostream &os, File file);
 
-struct Coord {
+class Coord {
+public:
     /***
      * Construct a Coord instance from the given file and rank values.
      * @param file the horizontal coordinate, letters A-H representing values [1,8]

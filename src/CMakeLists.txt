@@ -19,7 +19,8 @@ set(IMGUI_SRC
 set(BUILD_SRC
         board.cpp
         coord.cpp
-        piece.cpp)
+        piece.cpp
+        )
 
 add_executable(${PROJECT_NAME} ${IMGUI_SRC} ${BUILD_SRC} main.cpp)
 

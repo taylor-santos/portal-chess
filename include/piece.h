@@ -10,11 +10,13 @@ namespace Chess {
 enum class Color { White, Black };
 enum class Type { Bishop, King, Knight, Pawn, Portal, Queen, Rook };
 
-struct Piece {
+class Piece {
+public:
     Type  type;
     Color color;
 
     Piece(Type type, Color color);
+    Piece(const Piece &piece) = default;
 
     bool
     operator==(const Piece &other) const;

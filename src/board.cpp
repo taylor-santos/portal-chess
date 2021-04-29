@@ -11,9 +11,12 @@
 
 namespace Chess {
 
+template<typename T, int N>
+using sqr_array = std::array<std::array<T, N>, N>;
+
 class Board::InitialBoard : public Board {
 public:
-    explicit InitialBoard(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces);
+    explicit InitialBoard(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces);
 
     [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
@@ -21,19 +24,19 @@ public:
 private:
     class BoardState {
     public:
-        explicit BoardState(std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board);
+        explicit BoardState(sqr_array<incomplete_ptr<Piece>, 8> board);
 
-        [[nodiscard]] const std::shared_ptr<Piece> &
+        [[nodiscard]] const incomplete_ptr<Piece> &
         operator()(Coord coord) const;
 
     private:
-        const std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board_;
+        const sqr_array<incomplete_ptr<Piece>, 8> board_;
     } board_;
 };
 
 class Board::AddedPiece : public Board {
 public:
-    AddedPiece(std::shared_ptr<const Board> board, Coord coord, std::shared_ptr<Piece> piece);
+    AddedPiece(std::shared_ptr<const Board> board, Coord coord, incomplete_ptr<Piece> piece);
 
     [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
@@ -41,7 +44,7 @@ public:
 private:
     const std::shared_ptr<const Board> board_;
     const Coord                        coord_;
-    const std::shared_ptr<Piece>       piece_;
+    const incomplete_ptr<Piece>        piece_;
 };
 
 class Board::RemovedPiece : public Board {
@@ -70,14 +73,14 @@ private:
 };
 
 std::shared_ptr<const Board>
-Board::make(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces) {
+Board::make(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> pieces) {
     auto ptr   = std::make_shared<InitialBoard>(pieces);
     ptr->wptr_ = ptr;
     return ptr;
 }
 
 std::shared_ptr<const Board>
-Board::addPiece(Coord coord, std::shared_ptr<Piece> piece) const {
+Board::addPiece(Coord coord, incomplete_ptr<Piece> piece) const {
     auto ptr   = std::make_shared<AddedPiece>(wptr_.lock(), coord, std::move(piece));
     ptr->wptr_ = ptr;
     return ptr;
@@ -97,9 +100,9 @@ Board::movePiece(Coord from, Coord to) const {
     return ptr;
 }
 
-static std::array<std::array<std::shared_ptr<Piece>, 8>, 8>
-getPieces(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces) {
-    std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board;
+static sqr_array<incomplete_ptr<Piece>, 8>
+getPieces(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces) {
+    sqr_array<incomplete_ptr<Piece>, 8> board;
     for (auto &[coord, piece] : pieces) {
         auto [file, rank] = coord;
         auto &prev        = board[file - 1][rank - 1];
@@ -108,14 +111,13 @@ getPieces(const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces) {
             ss << "Cannot add piece to " << coord << ": this space is occupied";
             throw invalid_piece(ss.str());
         } else {
-            prev = piece;
+            prev = std::move(piece);
         }
     }
     return board;
 }
 
-Board::InitialBoard::InitialBoard(
-    const std::vector<std::pair<Coord, std::shared_ptr<Piece>>> &pieces)
+Board::InitialBoard::InitialBoard(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces)
     : board_{getPieces(pieces)} {}
 
 std::optional<const Piece *>
@@ -124,11 +126,10 @@ Board::InitialBoard::at(Coord coord) const {
     return optPiece ? std::optional(optPiece.get()) : std::nullopt;
 }
 
-Board::InitialBoard::BoardState::BoardState(
-    std::array<std::array<std::shared_ptr<Piece>, 8>, 8> board)
+Board::InitialBoard::BoardState::BoardState(sqr_array<incomplete_ptr<Piece>, 8> board)
     : board_{std::move(board)} {}
 
-const std::shared_ptr<Piece> &
+const incomplete_ptr<Piece> &
 Board::InitialBoard::BoardState::operator()(Coord coord) const {
     auto [file, rank] = coord;
     return board_[file - 1][rank - 1];
@@ -137,7 +138,7 @@ Board::InitialBoard::BoardState::operator()(Coord coord) const {
 Board::AddedPiece::AddedPiece(
     std::shared_ptr<const Board> board,
     Coord                        coord,
-    std::shared_ptr<Piece>       piece)
+    incomplete_ptr<Piece>        piece)
     : board_{std::move(board)}
     , coord_{coord}
     , piece_{std::move(piece)} {
@@ -165,7 +166,6 @@ Board::RemovedPiece::RemovedPiece(std::shared_ptr<const Board> board, Coord coor
 
 std::optional<const Piece *>
 Board::RemovedPiece::at(Coord coord) const {
-    std::optional<std::reference_wrapper<Piece>> optRef;
     return coord == coord_ ? std::nullopt : board_->at(coord);
 }
 
