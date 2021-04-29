@@ -178,3 +178,72 @@ TEST(Board, MovePieceDoesNotMutateBoard) {
     EXPECT_TRUE(board1->at(coord1));
     EXPECT_FALSE(board1->at(coord2));
 }
+
+TEST(Board, MakeShouldThrowOnOverlappingPieces) {
+    Coord coord{A, _1};
+    Piece piece1{Type::King, Color::White};
+    Piece piece2{Type::Queen, Color::White};
+    ASSERT_THROW((void)Board::make({{coord, piece1}, {coord, piece2}}), invalid_piece);
+}
+
+TEST(Board, RemovePieceShouldThrowIfUnoccupied) {
+    auto board = Board::make({});
+    ASSERT_THROW((void)board->removePiece({A, _1}), invalid_piece);
+}
+
+TEST(Board, MovingPieceShouldNotAffectOtherPieces) {
+    Coord coord1{A, _1}, coord2{B, _2};
+    Piece piece1{Type::Bishop, Color::White}, piece2{Type::Knight, Color::White};
+    auto  board   = Board::make({{coord1, piece1}, {coord2, piece2}});
+    board         = board->movePiece(coord1, {A, _2});
+    auto optPiece = board->at(coord2);
+
+    ASSERT_TRUE(optPiece);
+    EXPECT_EQ(*optPiece, piece2);
+}
+
+TEST(Board, AddPieceDoesNotMutateBoard) {
+    auto  board1 = Board::make({});
+    Coord coord{A, _1};
+
+    EXPECT_FALSE(board1->at(coord));
+
+    {
+        auto board2 = board1->addPiece(coord, {Type::Rook, Color::Black});
+        EXPECT_TRUE(board2->at(coord));
+    }
+
+    EXPECT_FALSE(board1->at(coord));
+}
+
+TEST(Board, RemovePieceDoesNotMutateBoard) {
+    Coord coord{A, _1};
+    auto  board1 = Board::make({{coord, {Type::Rook, Color::Black}}});
+
+    EXPECT_TRUE(board1->at(coord));
+
+    {
+        auto board2 = board1->removePiece(coord);
+        EXPECT_FALSE(board2->at(coord));
+    }
+
+    EXPECT_TRUE(board1->at(coord));
+}
+
+TEST(Board, MovePieceDoesNotMutateBoard) {
+    Coord coord1{A, _1};
+    Coord coord2{B, _2};
+    auto  board1 = Board::make({{coord1, {Type::Pawn, Color::Black}}});
+
+    EXPECT_TRUE(board1->at(coord1));
+    EXPECT_FALSE(board1->at(coord2));
+
+    {
+        auto board2 = board1->movePiece(coord1, coord2);
+        EXPECT_FALSE(board2->at(coord1));
+        EXPECT_TRUE(board2->at(coord2));
+    }
+
+    EXPECT_TRUE(board1->at(coord1));
+    EXPECT_FALSE(board1->at(coord2));
+}
