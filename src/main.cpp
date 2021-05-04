@@ -8,6 +8,9 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <cstdio>
+#include "board.h"
+#include "piece.h"
+#include <iostream>
 
 #include <glad/glad.h>
 
@@ -28,8 +31,73 @@ glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+std::shared_ptr<const Chess::Board>
+make_board() {
+    using namespace Chess;
+
+    std::vector<std::pair<Coord, incomplete_ptr<Piece>>> pieces;
+
+    pieces.emplace_back(
+        Coord{A, _7},
+        static_cast<std::unique_ptr<Piece>>(std::make_unique<Pawn>(Color::Black)));
+    pieces.emplace_back(
+        Coord{B, _5},
+        static_cast<std::unique_ptr<Piece>>(std::make_unique<Pawn>(Color::White)));
+
+    return Board::make(std::move(pieces), 0);
+}
+
+std::ostream &
+operator<<(
+    std::ostream &os,
+    const std::pair<std::shared_ptr<const Chess::Board>, std::vector<Chess::Move>>
+        &boardWithMoves) {
+    using namespace Chess;
+    const auto &[board, moves] = boardWithMoves;
+    for (auto rank = std::rbegin(ranks); rank != std::rend(ranks); rank++) {
+        os << *rank;
+        for (auto file : files) {
+            Coord coord{file, *rank};
+            auto  piece = board->at(coord);
+            if (piece) {
+                if (std::find_if(moves.begin(), moves.end(), [&coord](const Move &move) -> bool {
+                        return move.take == coord;
+                    }) != moves.end()) {
+                    os << "x";
+                } else {
+                    os << " ";
+                }
+                os << **piece;
+            } else if (std::find_if(moves.begin(), moves.end(), [&coord](const Move &move) -> bool {
+                           return move.to == coord;
+                       }) != moves.end()) {
+                os << " *";
+            } else {
+                os << "  ";
+            }
+        }
+        os << std::endl;
+    }
+    os << " ";
+    for (auto file : files) {
+        os << " " << file;
+    }
+    os << std::endl;
+
+    return os;
+}
+
 int
 main(int, char **) {
+    using namespace Chess;
+    auto board = make_board();
+    auto moves = (*board->at({A, _7}))->validMoves({A, _7}, *board, 1);
+    std::cout << std::make_pair(board, moves) << std::endl;
+    board = board->movePiece({A, _7}, {A, _5}, 1);
+    moves = (*board->at({B, _5}))->validMoves({B, _5}, *board, 2);
+    std::cout << std::make_pair(board, moves) << std::endl;
+
+    return 0;
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;

@@ -6,11 +6,15 @@
 #define PORTAL_CHESS_INCLUDE_COORD_H
 
 #include <ostream>
+#include <optional>
 
 namespace Chess {
 
 enum File { A = 1, B, C, D, E, F, G, H };
 enum Rank { _1 = 1, _2, _3, _4, _5, _6, _7, _8 };
+
+extern const File files[8];
+extern const Rank ranks[8];
 
 std::ostream &
 operator<<(std::ostream &os, File file);
@@ -30,6 +34,12 @@ public:
 
     bool
     operator!=(const Coord &other) const;
+
+    [[nodiscard]] std::optional<Coord>
+    offset(int fileOffset, int rankOffset) const;
+
+    [[nodiscard]] std::optional<Coord>
+    offset(std::pair<int, int> offsets) const;
 
     File file;
     Rank rank;

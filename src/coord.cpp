@@ -6,8 +6,12 @@
 
 #include <ostream>
 #include <sstream>
+#include <optional>
 
 namespace Chess {
+
+const File files[8] = {A, B, C, D, E, F, G, H};
+const Rank ranks[8] = {_1, _2, _3, _4, _5, _6, _7, _8};
 
 std::ostream &
 operator<<(std::ostream &os, File file) {
@@ -36,6 +40,22 @@ Coord::operator==(const Coord &other) const {
 bool
 Coord::operator!=(const Coord &other) const {
     return !(*this == other);
+}
+
+std::optional<Coord>
+Coord::offset(int fileOffset, int rankOffset) const {
+    int newFile = file + fileOffset;
+    int newRank = rank + rankOffset;
+    if (newFile < 1 || 8 < newFile || newRank < 1 || 8 < newRank) {
+        return std::nullopt;
+    }
+    return Coord(static_cast<File>(newFile), static_cast<Rank>(newRank));
+}
+
+std::optional<Coord>
+Coord::offset(std::pair<int, int> offsets) const {
+    auto [file, rank] = offsets;
+    return offset(file, rank);
 }
 
 std::ostream &

@@ -16,15 +16,18 @@ using sqr_array = std::array<std::array<T, N>, N>;
 
 class Board::InitialBoard : public Board {
 public:
-    explicit InitialBoard(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces);
+    InitialBoard(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces, int round);
 
     [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
 
 private:
+    std::list<std::pair<int, Coord>>
+    moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const override;
+
     class BoardState {
     public:
-        explicit BoardState(sqr_array<incomplete_ptr<Piece>, 8> board);
+        BoardState(sqr_array<incomplete_ptr<Piece>, 8> board);
 
         [[nodiscard]] const incomplete_ptr<Piece> &
         operator()(Coord coord) const;
@@ -36,12 +39,19 @@ private:
 
 class Board::AddedPiece : public Board {
 public:
-    AddedPiece(std::shared_ptr<const Board> board, Coord coord, incomplete_ptr<Piece> piece);
+    AddedPiece(
+        std::shared_ptr<const Board> board,
+        Coord                        coord,
+        incomplete_ptr<Piece>        piece,
+        int                          round);
 
     [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
 
 private:
+    std::list<std::pair<int, Coord>>
+    moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const override;
+
     const std::shared_ptr<const Board> board_;
     const Coord                        coord_;
     const incomplete_ptr<Piece>        piece_;
@@ -49,22 +59,28 @@ private:
 
 class Board::RemovedPiece : public Board {
 public:
-    RemovedPiece(std::shared_ptr<const Board> board, Coord coord);
+    RemovedPiece(std::shared_ptr<const Board> board, Coord coord, int round);
 
     [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
 
 private:
+    std::list<std::pair<int, Coord>>
+    moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const override;
+
     const std::shared_ptr<const Board> board_;
     const Coord                        coord_;
 };
 
 class Board::MovedPiece : public Board {
 public:
-    MovedPiece(std::shared_ptr<const Board> board, Coord from, Coord to);
+    MovedPiece(std::shared_ptr<const Board> board, Coord from, Coord to, int round);
 
     [[nodiscard]] std::optional<const Piece *>
     at(Coord coord) const override;
+
+    std::list<std::pair<int, Coord>>
+    moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const override;
 
 private:
     const std::shared_ptr<const Board> board_;
@@ -73,32 +89,40 @@ private:
 };
 
 std::shared_ptr<const Board>
-Board::make(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> pieces) {
-    auto ptr   = std::make_shared<InitialBoard>(pieces);
+Board::make(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> pieces, int round) {
+    auto ptr   = std::make_shared<InitialBoard>(pieces, round);
     ptr->wptr_ = ptr;
     return ptr;
 }
 
 std::shared_ptr<const Board>
-Board::addPiece(Coord coord, incomplete_ptr<Piece> piece) const {
-    auto ptr   = std::make_shared<AddedPiece>(wptr_.lock(), coord, std::move(piece));
+Board::addPiece(Coord coord, incomplete_ptr<Piece> piece, int round) const {
+    auto ptr   = std::make_shared<AddedPiece>(wptr_.lock(), coord, std::move(piece), round);
     ptr->wptr_ = ptr;
     return ptr;
 }
 
 std::shared_ptr<const Board>
-Board::removePiece(Coord coord) const {
-    auto ptr   = std::make_shared<RemovedPiece>(wptr_.lock(), coord);
+Board::removePiece(Coord coord, int round) const {
+    auto ptr   = std::make_shared<RemovedPiece>(wptr_.lock(), coord, round);
     ptr->wptr_ = ptr;
     return ptr;
 }
 
 std::shared_ptr<const Board>
-Board::movePiece(Coord from, Coord to) const {
-    auto ptr   = std::make_shared<MovedPiece>(wptr_.lock(), from, to);
+Board::movePiece(Coord from, Coord to, int round) const {
+    auto ptr   = std::make_shared<MovedPiece>(wptr_.lock(), from, to, round);
     ptr->wptr_ = ptr;
     return ptr;
 }
+
+std::list<std::pair<int, Coord>>
+Board::getMoveHistory(Coord coord) const {
+    return moveHistory(coord, {});
+}
+
+Board::Board(int round)
+    : round_{round} {}
 
 static sqr_array<incomplete_ptr<Piece>, 8>
 getPieces(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces) {
@@ -117,13 +141,25 @@ getPieces(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces) {
     return board;
 }
 
-Board::InitialBoard::InitialBoard(std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces)
-    : board_{getPieces(pieces)} {}
+Board::InitialBoard::InitialBoard(
+    std::vector<std::pair<Coord, incomplete_ptr<Piece>>> &pieces,
+    int                                                   round)
+    : Board(round)
+    , board_{getPieces(pieces)} {}
 
 std::optional<const Piece *>
 Board::InitialBoard::at(Coord coord) const {
     auto &optPiece = board_(coord);
     return optPiece ? std::optional(optPiece.get()) : std::nullopt;
+}
+
+std::list<std::pair<int, Coord>>
+Board::InitialBoard::moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const {
+    if (!board_(coord)) {
+        return {};
+    }
+    moves.push_front({round_, coord});
+    return std::move(moves);
 }
 
 Board::InitialBoard::BoardState::BoardState(sqr_array<incomplete_ptr<Piece>, 8> board)
@@ -138,8 +174,10 @@ Board::InitialBoard::BoardState::operator()(Coord coord) const {
 Board::AddedPiece::AddedPiece(
     std::shared_ptr<const Board> board,
     Coord                        coord,
-    incomplete_ptr<Piece>        piece)
-    : board_{std::move(board)}
+    incomplete_ptr<Piece>        piece,
+    int                          round)
+    : Board(round)
+    , board_{std::move(board)}
     , coord_{coord}
     , piece_{std::move(piece)} {
     if (board_->at(coord)) {
@@ -153,9 +191,18 @@ std::optional<const Piece *>
 Board::AddedPiece::at(Coord coord) const {
     return coord_ == coord ? piece_.get() : board_->at(coord);
 }
+std::list<std::pair<int, Coord>>
+Board::AddedPiece::moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const {
+    if (coord == coord_) {
+        moves.push_front({round_, coord});
+        return std::move(moves);
+    }
+    return board_->moveHistory(coord, std::move(moves));
+}
 
-Board::RemovedPiece::RemovedPiece(std::shared_ptr<const Board> board, Coord coord)
-    : board_{std::move(board)}
+Board::RemovedPiece::RemovedPiece(std::shared_ptr<const Board> board, Coord coord, int round)
+    : Board(round)
+    , board_{std::move(board)}
     , coord_{coord} {
     if (!board_->at(coord)) {
         std::stringstream ss;
@@ -168,9 +215,18 @@ std::optional<const Piece *>
 Board::RemovedPiece::at(Coord coord) const {
     return coord == coord_ ? std::nullopt : board_->at(coord);
 }
+std::list<std::pair<int, Coord>>
+Board::RemovedPiece::moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const {
+    if (coord_ == coord) {
+        return {};
+    } else {
+        return board_->moveHistory(coord, std::move(moves));
+    }
+}
 
-Board::MovedPiece::MovedPiece(std::shared_ptr<const Board> board, Coord from, Coord to)
-    : board_{std::move(board)}
+Board::MovedPiece::MovedPiece(std::shared_ptr<const Board> board, Coord from, Coord to, int round)
+    : Board(round)
+    , board_{std::move(board)}
     , from_{from}
     , to_{to} {
     if (board_->at(to_)) {
@@ -194,6 +250,42 @@ Board::MovedPiece::at(Coord coord) const {
     } else {
         return board_->at(coord);
     }
+}
+std::list<std::pair<int, Coord>>
+Board::MovedPiece::moveHistory(Coord coord, std::list<std::pair<int, Coord>> &&moves) const {
+    if (to_ == coord) {
+        moves.push_front({round_, coord});
+        return board_->moveHistory(from_, std::move(moves));
+    } else {
+        return board_->moveHistory(coord, std::move(moves));
+    }
+}
+
+std::ostream &
+operator<<(std::ostream &os, const Piece &piece);
+
+std::ostream &
+operator<<(std::ostream &os, const Board &board) {
+    for (auto rank = std::rbegin(ranks); rank != std::rend(ranks); rank++) {
+        os << *rank;
+        for (auto file : files) {
+            Coord coord{file, *rank};
+            auto  piece = board.at(coord);
+            if (piece) {
+                os << " " << **piece;
+            } else {
+                os << "  ";
+            }
+        }
+        os << std::endl;
+    }
+    os << " ";
+    for (auto file : files) {
+        os << " " << file;
+    }
+    os << std::endl;
+
+    return os;
 }
 
 invalid_piece::invalid_piece(const std::string &arg)
